@@ -12,7 +12,39 @@ export interface CustomerFilterParams {
   researchType?: string;
 }
 
+export interface CreateCustomerPayload {
+  fullName: string;
+  email: string;
+  phone?: string;
+  university?: string;
+  username: string;
+  password: string;
+  title: string;
+  topic: string;
+  researchType?: string;
+  supervisor?: string;
+  startDate?: string;
+  expectedCompletionDate?: string;
+  description?: string;
+  totalAmount?: number;
+  paidAmount?: number;
+  status?: string;
+}
+
 export const customerService = {
+  async createCustomer(payload: CreateCustomerPayload): Promise<{ success: boolean; customer?: any; message?: string }> {
+    try {
+      const res = await fetchApi<{ success: boolean; customer: any; message: string }>('/api/admin/users', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+      return res;
+    } catch (err: any) {
+      console.error('Error creating customer:', err);
+      throw err;
+    }
+  },
+
   async getCustomers(filters: CustomerFilterParams = {}): Promise<CustomerRecord[]> {
     try {
       const data = await fetchApi<any[]>('/api/admin/users');

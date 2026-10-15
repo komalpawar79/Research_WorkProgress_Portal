@@ -6,7 +6,14 @@ export async function fetchApi<T = any>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const token = localStorage.getItem('rf_firebase_token') || 'demo-token';
+  let token =
+    localStorage.getItem('rf_jwt_token') ||
+    localStorage.getItem('rf_firebase_token');
+
+  if (!token) {
+    const role = localStorage.getItem('rf_role');
+    token = role === 'admin' ? 'demo-admin-token' : 'demo-token';
+  }
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',

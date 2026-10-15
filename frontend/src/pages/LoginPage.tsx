@@ -23,8 +23,18 @@ export const LoginPage: React.FC = () => {
     setLoading(false);
 
     if (res.success) {
-      showToast('Welcome back, Rahul!', 'success');
-      navigate('/');
+      const storedRole = localStorage.getItem('rf_role');
+      const storedUser = localStorage.getItem('rf_user');
+      const parsed = storedUser ? JSON.parse(storedUser) : null;
+      const firstName = parsed?.full_name?.split(' ')[0] || 'Scholar';
+
+      if (storedRole === 'admin') {
+        showToast('Welcome to Admin Console', 'success');
+        navigate('/admin/dashboard');
+      } else {
+        showToast(`Welcome back, ${firstName}!`, 'success');
+        navigate('/');
+      }
     } else {
       showToast(res.error || 'Invalid credentials', 'error');
     }

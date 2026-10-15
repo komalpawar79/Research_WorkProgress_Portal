@@ -1,17 +1,20 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, UserPlus } from 'lucide-react';
 import { customerService } from '../../services/customerService';
 import { ProgressBar } from '../../components/common/ProgressBar';
+import { CreateCustomerModal } from '../../components/admin/CreateCustomerModal';
 
 export const CustomersPage: React.FC = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [paymentFilter, setPaymentFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
   const [typeFilter, setTypeFilter] = useState('All');
   const [currentPage, setCurrentPage] = useState(1);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const { data: customers = [], isLoading } = useQuery({
     queryKey: ['customers', search, paymentFilter, statusFilter, typeFilter],
@@ -26,14 +29,24 @@ export const CustomersPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Page Title */}
-      <div>
-        <h1 className="font-serif text-2xl sm:text-3xl font-bold text-editorial-dark">
-          Customers
-        </h1>
-        <p className="text-xs sm:text-sm text-editorial-muted mt-1">
-          Manage your customers and their research projects.
-        </p>
+      {/* Page Title & Actions */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="font-serif text-2xl sm:text-3xl font-bold text-editorial-dark">
+            Customers
+          </h1>
+          <p className="text-xs sm:text-sm text-editorial-muted mt-1">
+            Manage your customers, login credentials, and their research projects.
+          </p>
+        </div>
+
+        <button
+          onClick={() => setIsCreateModalOpen(true)}
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary hover:bg-primary-hover active:scale-98 text-white text-xs sm:text-sm font-semibold transition-all shadow-md self-start sm:self-auto"
+        >
+          <UserPlus className="w-4 h-4" />
+          <span>Create Customer</span>
+        </button>
       </div>
 
       {/* Search & Filters Bar matching reference Screen 2 */}
@@ -136,9 +149,16 @@ export const CustomersPage: React.FC = () => {
                           className="w-9 h-9 rounded-full object-cover ring-1 ring-border flex-shrink-0"
                         />
                         <div>
-                          <p className="font-semibold text-editorial-dark text-xs sm:text-sm leading-tight">
-                            {c.full_name}
-                          </p>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <p className="font-semibold text-editorial-dark text-xs sm:text-sm leading-tight">
+                              {c.full_name}
+                            </p>
+                            {c.username && (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-[#FAF9F5] border border-border text-editorial-muted font-mono">
+                                @{c.username}
+                              </span>
+                            )}
+                          </div>
                           <p className="text-[11px] text-editorial-muted font-mono mt-0.5">
                             {c.email}
                           </p>
@@ -255,6 +275,15 @@ export const CustomersPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Create Customer & Handover Credentials Modal */}
+      <CreateCustomerModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onCustomerCreated={() => {
+          queryClient.invalidateQueries({ queryKey: ['customers'] });
+        }}
+      />
     </div>
   );
 };
