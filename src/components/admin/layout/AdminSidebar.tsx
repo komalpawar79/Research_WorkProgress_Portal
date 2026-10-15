@@ -12,6 +12,7 @@ import {
   Settings,
   LogOut,
   Layers,
+  ExternalLink,
 } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 
@@ -82,6 +83,15 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ onCloseMobile }) => 
 
       {/* Bottom Navigation: Settings & Logout */}
       <div className="p-3.5 border-t border-[#2C4439]/60 space-y-1">
+        <NavLink
+          to="/"
+          onClick={onCloseMobile}
+          className="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium text-[#C59B6D] hover:bg-[#253D32] hover:text-[#E8BA85] transition-colors"
+        >
+          <ExternalLink className="w-4 h-4" />
+          <span>View Customer Portal</span>
+        </NavLink>
+
         <NavLink
           to="/admin/settings"
           onClick={onCloseMobile}

@@ -9,6 +9,7 @@ import {
   User,
   LogOut,
   Layers,
+  Shield,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -89,11 +90,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ unreadNotifsCount = 3, onClose
         })}
       </nav>
 
-      {/* Bottom Logout Area */}
-      <div className="p-4 border-t border-[#2C4439]/60">
+      {/* Bottom Switch & Logout Area */}
+      <div className="p-4 border-t border-[#2C4439]/60 space-y-1">
+        <NavLink
+          to="/admin/dashboard"
+          onClick={onCloseMobile}
+          className="w-full flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm font-medium text-[#C59B6D] hover:bg-[#253D32] hover:text-[#E8BA85] transition-colors"
+        >
+          <Shield className="w-4 h-4" />
+          <span>Admin Console</span>
+        </NavLink>
+
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-[#A5B8AD] hover:bg-[#2A4237] hover:text-[#FFAAA0] transition-colors"
+          className="w-full flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm font-medium text-[#A5B8AD] hover:bg-[#2A4237] hover:text-[#FFAAA0] transition-colors"
         >
           <LogOut className="w-4 h-4" />
           <span>Logout</span>
