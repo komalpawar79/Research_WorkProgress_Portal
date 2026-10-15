@@ -619,3 +619,4 @@ export const CreateCustomerModal: React.FC<CreateCustomerModalProps> = ({
     </div>
   );
 };
+

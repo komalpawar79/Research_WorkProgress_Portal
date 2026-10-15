@@ -37,10 +37,54 @@ export interface EditChapterPayload {
 
 export const adminProjectService = {
   async getProjects(): Promise<AdminProject[]> {
+    try {
+      const data = await fetchApi<any[]>('/api/projects');
+      if (Array.isArray(data) && data.length > 0) {
+        return data.map((p) => ({
+          id: p.id,
+          customer_id: p.customer_id || p.user_id,
+          customer_name: p.customer_name || 'Scholar',
+          customer_email: p.customer_email || '',
+          customer_avatar: p.customer_avatar,
+          topic: p.topic || p.title,
+          research_type: p.research_type || 'Thesis',
+          status: p.status || 'In Progress',
+          overall_progress: Number(p.overall_progress || p.progress_pct || 0),
+          started_at: p.start_date || (p.created_at ? new Date(p.created_at).toISOString().split('T')[0] : 'Recent'),
+          expected_completion: p.expected_completion_date || '2026-12-15',
+          chapter_count: Number(p.chapter_count || 5),
+          description: p.description,
+        }));
+      }
+    } catch (e) {
+      console.warn('Failed to fetch projects from API:', e);
+    }
     return localProjects;
   },
 
   async getProjectById(id: string): Promise<AdminProject | null> {
+    try {
+      const p = await fetchApi<any>(`/api/projects/${id}`);
+      if (p && p.id) {
+        return {
+          id: p.id,
+          customer_id: p.customer_id || p.user_id,
+          customer_name: p.customer_name || 'Scholar',
+          customer_email: p.customer_email || '',
+          customer_avatar: p.customer_avatar,
+          topic: p.topic || p.title,
+          research_type: p.research_type || 'Thesis',
+          status: p.status || 'In Progress',
+          overall_progress: Number(p.overall_progress || p.progress_pct || 0),
+          started_at: p.start_date || (p.created_at ? new Date(p.created_at).toISOString().split('T')[0] : 'Recent'),
+          expected_completion: p.expected_completion_date || '2026-12-15',
+          chapter_count: Number(p.chapter_count || p.chapters?.length || 5),
+          description: p.description,
+        };
+      }
+    } catch (e) {
+      console.warn('Failed to fetch project by ID from API:', e);
+    }
     return localProjects.find((p) => p.id === id) || localProjects[0] || null;
   },
 
@@ -237,6 +281,29 @@ export const adminProjectService = {
   },
 
   async createProject(project: Omit<AdminProject, 'id'>): Promise<AdminProject> {
+    try {
+      const res = await fetchApi<any>('/api/projects', {
+        method: 'POST',
+        body: JSON.stringify({
+          customerId: project.customer_id,
+          userId: project.customer_id,
+          title: project.topic,
+          topic: project.topic,
+          researchType: project.research_type,
+          expectedCompletionDate: project.expected_completion,
+          description: project.description,
+        }),
+      });
+      if (res && res.id) {
+        return {
+          ...project,
+          id: res.id,
+        };
+      }
+    } catch (err) {
+      console.warn('API createProject failed, saving locally:', err);
+    }
+
     const newProj: AdminProject = {
       ...project,
       id: `proj-${Date.now()}`,

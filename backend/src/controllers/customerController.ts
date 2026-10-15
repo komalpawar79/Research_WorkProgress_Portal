@@ -5,11 +5,11 @@ export const getCustomers = async (_req: Request, res: Response): Promise<void> 
   try {
     if (isDbConnected) {
       const result = await query(`
-        SELECT u.id, u.email, u.full_name, u.phone, u.role, u.created_at,
-               p.id as project_id, p.title as project_title, p.status as project_status,
-               p.progress_pct, p.total_fee, p.paid_amount, p.target_completion_date
+        SELECT u.id, u.username, u.email, u.full_name, u.phone, u.role, u.status as account_status, u.created_at,
+               p.id as project_id, p.title as project_title, p.topic as research_topic, p.status as project_status,
+               p.overall_progress as progress_pct, p.total_fee, p.paid_amount, p.expected_completion_date as target_completion_date
         FROM users u
-        LEFT JOIN projects p ON p.customer_id = u.id
+        LEFT JOIN projects p ON p.user_id = u.id
         WHERE u.role = 'customer'
         ORDER BY u.created_at DESC
       `);
@@ -17,19 +17,7 @@ export const getCustomers = async (_req: Request, res: Response): Promise<void> 
       return;
     }
 
-    res.status(200).json([
-      {
-        id: 'usr-rahul-01',
-        email: 'rahul@gmail.com',
-        full_name: 'Rahul Sharma',
-        phone: '+91 98765 43210',
-        project_title: 'Deep Learning for Low-Resource NLP in Indic Languages',
-        project_status: 'In Progress',
-        progress_pct: 65,
-        total_fee: 45000,
-        paid_amount: 30000,
-      },
-    ]);
+    res.status(200).json([]);
   } catch (error: any) {
     console.error('Error fetching customers:', error);
     res.status(500).json({ error: 'Failed to fetch customers', details: error.message });
@@ -43,8 +31,8 @@ export const createCustomer = async (req: Request, res: Response): Promise<void>
 
     if (isDbConnected) {
       await query(
-        `INSERT INTO users (id, email, full_name, role, phone)
-         VALUES ($1, $2, $3, $4, $5)`,
+        `INSERT INTO users (id, email, full_name, role, phone, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5, NOW(), NOW())`,
         [userId, email, fullName, role, phone]
       );
 

@@ -20,18 +20,21 @@ export const DashboardPage: React.FC = () => {
   const { data: project, isLoading: loadingProject } = useQuery({
     queryKey: ['project', user?.id],
     queryFn: () => (user ? projectService.getProjectByUserId(user.id) : null),
+    refetchInterval: 5000,
   });
 
   const { data: chapters = [] } = useQuery({
     queryKey: ['chapters', project?.id],
     queryFn: () => (project ? chapterService.getChaptersByProjectId(project.id) : []),
     enabled: Boolean(project?.id),
+    refetchInterval: 5000,
   });
 
   const { data: latestChapter } = useQuery({
     queryKey: ['latestChapter', project?.id],
     queryFn: () => (project ? chapterService.getLatestCompletedChapter(project.id) : null),
     enabled: Boolean(project?.id),
+    refetchInterval: 5000,
   });
 
   const handleViewChapter = async (chapterId: string) => {

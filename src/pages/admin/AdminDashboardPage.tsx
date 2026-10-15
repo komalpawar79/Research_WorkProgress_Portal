@@ -11,21 +11,25 @@ export const AdminDashboardPage: React.FC = () => {
   const { data: metrics = [] } = useQuery({
     queryKey: ['adminMetrics'],
     queryFn: () => adminService.getDashboardMetrics(),
+    refetchInterval: 5000,
   });
 
   const { data: activities = [] } = useQuery({
     queryKey: ['adminActivities'],
     queryFn: () => adminService.getRecentActivities(),
+    refetchInterval: 5000,
   });
 
   const { data: projectStatus } = useQuery({
     queryKey: ['projectStatusBreakdown'],
     queryFn: () => adminService.getProjectStatusBreakdown(),
+    refetchInterval: 5000,
   });
 
   const { data: attentionItems = [] } = useQuery({
     queryKey: ['attentionItems'],
     queryFn: () => adminService.getAttentionItems(),
+    refetchInterval: 5000,
   });
 
   return (

@@ -1,12 +1,20 @@
 import { Router } from 'express';
-import { getSecureDocumentAccess } from '../controllers/documentController.js';
-import { authenticateFirebaseUser } from '../middleware/authMiddleware.js';
+import {
+  getAllDocuments,
+  getSecureDocumentAccess,
+  toggleDocumentRelease,
+} from '../controllers/documentController.js';
+import { authenticate, requireAdmin } from '../middleware/authMiddleware.js';
 
 const router = Router();
 
-// POST /api/documents/secure-access
-// Protected by Firebase Auth middleware -> checks Firestore release flag -> returns signed Cloudinary watermarked URL
-router.post('/secure-access', authenticateFirebaseUser, getSecureDocumentAccess);
+// Public / Admin query for all documents
+router.get('/', authenticate, getAllDocuments);
+
+// POST /api/documents/secure-access - Dynamic watermarked PDF viewer
+router.post('/secure-access', authenticate, getSecureDocumentAccess);
+
+// POST /api/documents/toggle-release - Admin document release toggle
+router.post('/toggle-release', authenticate, requireAdmin, toggleDocumentRelease);
 
 export default router;
-

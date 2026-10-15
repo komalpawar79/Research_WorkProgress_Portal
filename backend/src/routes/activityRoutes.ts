@@ -1,9 +1,11 @@
 import { Router } from 'express';
-import { getActivityLogs, getNotifications } from '../controllers/activityController.js';
+import { getActivityLogs, logActivity, getNotifications } from '../controllers/activityController.js';
+import { authenticate } from '../middleware/authMiddleware.js';
 
 const router = Router();
 
-router.get('/logs', getActivityLogs);
-router.get('/notifications', getNotifications);
+router.get('/', authenticate, getActivityLogs);
+router.post('/', authenticate, logActivity);
+router.get('/notifications', authenticate, getNotifications);
 
 export default router;

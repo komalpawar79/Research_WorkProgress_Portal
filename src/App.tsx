@@ -32,8 +32,8 @@ import { AdminSettingsPage } from './pages/admin/AdminSettingsPage';
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      refetchOnWindowFocus: false,
-      staleTime: 1000 * 60 * 5,
+      refetchOnWindowFocus: true,
+      staleTime: 0,
     },
   },
 });

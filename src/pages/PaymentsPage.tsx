@@ -11,12 +11,14 @@ export const PaymentsPage: React.FC = () => {
   const { data: summary, isLoading: loadingSummary } = useQuery({
     queryKey: ['paymentSummary', user?.id],
     queryFn: () => (user ? paymentService.getPaymentSummary(user.id) : null),
+    refetchInterval: 5000,
   });
 
   const { data: payments = [], isLoading: loadingPayments } = useQuery({
     queryKey: ['paymentHistory', user?.id],
     queryFn: () => (user ? paymentService.getPaymentHistory(user.id) : []),
     enabled: Boolean(user?.id),
+    refetchInterval: 5000,
   });
 
   if (loadingSummary || loadingPayments) {

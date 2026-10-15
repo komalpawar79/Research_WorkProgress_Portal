@@ -1,3 +1,4 @@
+import { fetchApi } from './apiClient';
 import { supabase, isSupabaseConfigured } from './supabaseClient';
 import { mockNotifications } from './mockData';
 import { Notification } from '../types/database.types';
@@ -7,6 +8,24 @@ let localNotifs = [...mockNotifications];
 
 export const notificationService = {
   async getNotifications(userId: string): Promise<Notification[]> {
+    try {
+      const data = await fetchApi<any[]>('/api/user/notifications');
+      if (Array.isArray(data) && data.length > 0) {
+        return data.map((n) => ({
+          id: n.id,
+          user_id: n.user_id,
+          project_id: n.project_id,
+          title: n.title,
+          message: n.message,
+          type: n.type || 'general_update',
+          read: Boolean(n.is_read || n.read),
+          created_at: n.created_at,
+        })) as Notification[];
+      }
+    } catch (e) {
+      // Backend request fallback
+    }
+
     if (!isSupabaseConfigured || !supabase) {
       return localNotifs;
     }

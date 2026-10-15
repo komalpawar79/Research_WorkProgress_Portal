@@ -18,6 +18,7 @@ export const NotificationsPage: React.FC = () => {
     queryKey: ['notifications', user?.id],
     queryFn: () => (user ? notificationService.getNotifications(user.id) : []),
     enabled: Boolean(user?.id),
+    refetchInterval: 5000,
   });
 
   const markReadMutation = useMutation({

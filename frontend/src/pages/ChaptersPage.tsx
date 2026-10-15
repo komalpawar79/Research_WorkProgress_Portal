@@ -18,12 +18,14 @@ export const ChaptersPage: React.FC = () => {
   const { data: project } = useQuery({
     queryKey: ['project', user?.id],
     queryFn: () => (user ? projectService.getProjectByUserId(user.id) : null),
+    refetchInterval: 5000,
   });
 
   const { data: chapters = [], isLoading } = useQuery({
     queryKey: ['chapters', project?.id],
     queryFn: () => (project ? chapterService.getChaptersByProjectId(project.id) : []),
     enabled: Boolean(project?.id),
+    refetchInterval: 5000,
   });
 
   const handleViewChapter = async (chapterId: string) => {
