@@ -1,0 +1,16 @@
+{
+  "name": "researchflow-workspace",
+  "private": true,
+  "version": "1.0.0",
+  "description": "ResearchFlow Workspace: React Frontend + Firebase/Cloudinary Backend",
+  "scripts": {
+    "dev": "npm run dev:frontend",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "dev:backend": "npm run dev --prefix backend",
+    "build:frontend": "npm run build --prefix frontend",
+    "build:backend": "npm run build --prefix backend",
+    "build": "npm run build:frontend",
+    "clean-port": "powershell -Command \"$p = Get-NetTCPConnection -LocalPort 5000 -ErrorAction SilentlyContinue; if ($p) { Stop-Process -Id $p.OwningProcess -Force; Write-Host 'Port 5000 freed' } else { Write-Host 'Port 5000 already free' }\"",
+    "install:all": "npm install --prefix frontend && npm install --prefix backend"
+  }
+}

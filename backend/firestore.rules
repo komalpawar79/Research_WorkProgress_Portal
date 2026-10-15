@@ -1,0 +1,67 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper: Is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper: Is owner of the record
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Helper: Is admin role
+    function isAdmin() {
+      return isAuthenticated() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'supervisor'];
+    }
+
+    // 1. Users metadata
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow write: if isAdmin();
+      allow update: if isOwner(userId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['phone', 'avatar_url']);
+    }
+
+    // 2. Research Projects metadata
+    match /projects/{projectId} {
+      allow read: if isAdmin() || (isAuthenticated() && resource.data.user_id == request.auth.uid);
+      allow write: if isAdmin();
+    }
+
+    // 3. Chapters metadata (Check: Is chapter RELEASED?)
+    match /chapters/{chapterId} {
+      allow read: if isAdmin() || (
+        isAuthenticated() && 
+        resource.data.document_released == true && 
+        resource.data.status == 'Completed'
+      );
+      allow write: if isAdmin();
+    }
+
+    // 4. Documents metadata (Only metadata references, raw files live in Cloudinary)
+    match /documents/{docId} {
+      allow read: if isAdmin() || (
+        isAuthenticated() && 
+        resource.data.user_id == request.auth.uid
+      );
+      allow write: if isAdmin();
+    }
+
+    // 5. Payments metadata
+    match /payments/{paymentId} {
+      allow read: if isOwner(resource.data.user_id) || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // 6. Notifications
+    match /notifications/{notifId} {
+      allow read: if isOwner(resource.data.user_id) || isAdmin();
+      allow update: if isOwner(resource.data.user_id) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+      allow write: if isAdmin();
+    }
+  }
+}
+

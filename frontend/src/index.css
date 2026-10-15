@@ -1,0 +1,68 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #F7F5F0;
+    color: #202522;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  h1, h2, h3, .font-serif {
+    font-family: 'Playfair Display', Georgia, Cambria, serif;
+  }
+}
+
+/* Custom subtle scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #DDDCD5;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #C4C3BA;
+}
+
+/* Protected document reader security styles */
+.protected-canvas {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Print blocker overlay */
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+  body::before {
+    content: "DOCUMENT PRINTING IS RESTRICTED. CONFIDENTIAL FOR REVIEW ONLY.";
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 24pt;
+    font-weight: bold;
+    color: #000;
+    visibility: visible !important;
+  }
+}
+
+/* Watermark repeating grid pattern */
+.watermark-grid {
+  pointer-events: none;
+  background-size: 320px 220px;
+}
+
