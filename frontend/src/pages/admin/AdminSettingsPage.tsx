@@ -113,8 +113,51 @@ export const AdminSettingsPage: React.FC = () => {
     setIsEditing(false);
   };
 
-  // Local file upload handler
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Compress image to max 256x256 JPEG (~15-25 KB) so it never exceeds browser localStorage quota
+  const compressImage = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const maxDim = 256;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > maxDim) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            }
+          } else {
+            if (height > maxDim) {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            resolve(e.target?.result as string);
+            return;
+          }
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressed = canvas.toDataURL('image/jpeg', 0.82);
+          resolve(compressed);
+        };
+        img.onerror = () => reject(new Error('Failed to load image'));
+        img.src = e.target?.result as string;
+      };
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // Local file upload handler with automatic client-side compression
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -123,20 +166,13 @@ export const AdminSettingsPage: React.FC = () => {
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      showToast('Image size should be less than 5MB', 'error');
-      return;
+    try {
+      const compressedBase64 = await compressImage(file);
+      setFormData((prev) => ({ ...prev, avatarUrl: compressedBase64 }));
+      showToast('Profile photo optimized! Click "Save Changes" to apply.', 'info');
+    } catch {
+      showToast('Could not process image file. Please try another image.', 'error');
     }
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const base64 = event.target?.result as string;
-      if (base64) {
-        setFormData((prev) => ({ ...prev, avatarUrl: base64 }));
-        showToast('Profile photo selected! Click "Save Changes" to apply.', 'info');
-      }
-    };
-    reader.readAsDataURL(file);
   };
 
   const handleSaveProfile = async (e: React.FormEvent) => {
@@ -173,8 +209,18 @@ export const AdminSettingsPage: React.FC = () => {
           role: 'admin',
         };
 
-        // Instantly update localStorage & notify AdminHeader across the app
-        localStorage.setItem('rf_user', JSON.stringify(updatedAdmin));
+        // Safely update localStorage without exceeding browser storage quota
+        try {
+          localStorage.setItem('rf_user', JSON.stringify(updatedAdmin));
+        } catch (storageErr) {
+          console.warn('LocalStorage quota warning. Storing core details:', storageErr);
+          try {
+            const pruned = { ...updatedAdmin, avatar_url: DEFAULT_AVATAR, avatarUrl: DEFAULT_AVATAR };
+            localStorage.setItem('rf_user', JSON.stringify(pruned));
+          } catch {}
+        }
+
+        // Instantly notify AdminHeader & all app listeners
         window.dispatchEvent(new CustomEvent('adminProfileUpdated', { detail: updatedAdmin }));
 
         setProfileData({

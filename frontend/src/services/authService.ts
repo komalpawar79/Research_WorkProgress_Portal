@@ -10,7 +10,9 @@ export const authService = {
       try {
         const res = await fetchApi<{ user: any }>('/api/auth/me');
         if (res && res.user) {
-          localStorage.setItem('rf_user', JSON.stringify(res.user));
+          try {
+            localStorage.setItem('rf_user', JSON.stringify(res.user));
+          } catch {}
           return {
             id: res.user.id,
             full_name: res.user.full_name || res.user.name,
@@ -103,10 +105,21 @@ export const authService = {
       });
 
       if (res && res.success && res.token && res.user) {
-        localStorage.setItem('rf_jwt_token', res.token);
-        localStorage.setItem('rf_user', JSON.stringify(res.user));
-        localStorage.setItem('rf_auth', 'true');
-        localStorage.setItem('rf_role', res.user.role);
+        try {
+          localStorage.setItem('rf_jwt_token', res.token);
+          localStorage.setItem('rf_auth', 'true');
+          localStorage.setItem('rf_role', res.user.role);
+          try {
+            localStorage.setItem('rf_user', JSON.stringify(res.user));
+          } catch {
+            const minUser = { ...res.user };
+            delete minUser.avatar_url;
+            delete minUser.avatarUrl;
+            localStorage.setItem('rf_user', JSON.stringify(minUser));
+          }
+        } catch (e) {
+          console.warn('LocalStorage save error:', e);
+        }
 
         return {
           user: {

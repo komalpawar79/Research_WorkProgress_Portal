@@ -138,7 +138,16 @@ export const adminService = {
       body: JSON.stringify(payload),
     });
     if (res && res.user) {
-      localStorage.setItem('rf_user', JSON.stringify(res.user));
+      try {
+        localStorage.setItem('rf_user', JSON.stringify(res.user));
+      } catch {
+        try {
+          const minimal = { ...res.user };
+          delete minimal.avatar_url;
+          delete minimal.avatarUrl;
+          localStorage.setItem('rf_user', JSON.stringify(minimal));
+        } catch {}
+      }
     }
     return res;
   },
