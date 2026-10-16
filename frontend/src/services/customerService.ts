@@ -38,6 +38,22 @@ export const customerService = {
         method: 'POST',
         body: JSON.stringify(payload),
       });
+
+      // Cache created credentials so client can access portal seamlessly
+      try {
+        const existing = JSON.parse(localStorage.getItem('rf_saved_customers') || '[]');
+        existing.push({
+          id: res.customer?.id || `usr-${Date.now()}`,
+          full_name: payload.fullName,
+          fullName: payload.fullName,
+          email: payload.email,
+          username: payload.username,
+          password: payload.password,
+          research_topic: payload.topic,
+        });
+        localStorage.setItem('rf_saved_customers', JSON.stringify(existing));
+      } catch {}
+
       return res;
     } catch (err: any) {
       console.error('Error creating customer:', err);

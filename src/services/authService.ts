@@ -128,16 +128,60 @@ export const authService = {
       }
     }
 
+    // 2. Demo fallback if backend is offline or deployed frontend cannot reach localhost
+    const lowerInput = cleanInput.toLowerCase();
     if (
-      cleanInput.toLowerCase().includes('rahul') ||
-      cleanInput === 'rahul.sharma' ||
-      cleanInput === 'rahul@gmail.com' ||
+      lowerInput.includes('rahul') ||
+      lowerInput.includes('priya') ||
+      lowerInput.includes('amit') ||
+      lowerInput.includes('vikram') ||
+      lowerInput.includes('student') ||
+      lowerInput.includes('scholar') ||
       pass === 'research123' ||
-      pass === 'Rahul@123'
+      pass === 'Rahul@123' ||
+      pass === 'password123'
     ) {
+      const name = lowerInput.includes('priya')
+        ? 'Priya Mehta'
+        : lowerInput.includes('amit')
+        ? 'Amit Patel'
+        : lowerInput.includes('vikram')
+        ? 'Vikram Singh'
+        : 'Rahul Sharma';
+
+      const customUser: UserProfile = {
+        ...mockProfile,
+        id: `usr-${name.toLowerCase().split(' ')[0]}-01`,
+        full_name: name,
+        email: cleanInput.includes('@') ? cleanInput : `${name.toLowerCase().replace(/\s+/g, '.')}@gmail.com`,
+        role: 'student',
+      };
       localStorage.setItem('rf_auth', 'true');
-      return { user: mockProfile, error: null };
+      localStorage.setItem('rf_user', JSON.stringify(customUser));
+      return { user: customUser, error: null };
     }
+
+    // Check custom customers saved in localStorage
+    try {
+      const saved = JSON.parse(localStorage.getItem('rf_saved_customers') || '[]');
+      const match = saved.find(
+        (c: any) =>
+          c.username?.toLowerCase() === lowerInput ||
+          c.email?.toLowerCase() === lowerInput
+      );
+      if (match) {
+        const customUser: UserProfile = {
+          ...mockProfile,
+          id: match.id,
+          full_name: match.full_name || match.fullName,
+          email: match.email,
+          role: 'student',
+        };
+        localStorage.setItem('rf_auth', 'true');
+        localStorage.setItem('rf_user', JSON.stringify(customUser));
+        return { user: customUser, error: null };
+      }
+    } catch {}
 
     if (cleanInput.includes('admin') && (pass === 'admin123' || pass === 'Admin@123')) {
       localStorage.setItem('rf_auth', 'true');
