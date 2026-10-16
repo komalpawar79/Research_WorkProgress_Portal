@@ -755,11 +755,11 @@ export const updateAdminProfile = async (req: Request, res: Response): Promise<v
     // Update the record
     await query(
       `UPDATE users
-       SET full_name = COALESCE($1, full_name),
-           email = COALESCE($2, email),
-           phone = COALESCE($3, phone),
-           username = COALESCE($4, username),
-           avatar_url = CASE WHEN $5 IS NOT NULL THEN $5 ELSE avatar_url END,
+       SET full_name = COALESCE($1::varchar, full_name),
+           email = COALESCE($2::varchar, email),
+           phone = COALESCE($3::varchar, phone),
+           username = COALESCE($4::varchar, username),
+           avatar_url = COALESCE($5::text, avatar_url),
            updated_at = NOW()
        WHERE id = $6`,
       [
@@ -770,7 +770,9 @@ export const updateAdminProfile = async (req: Request, res: Response): Promise<v
         avatarUrl !== undefined ? avatarUrl : null,
         targetId,
       ]
-    ).catch(() => {});
+    ).catch((err) => {
+      console.error('Update admin profile query error:', err.message);
+    });
 
     // Fetch the updated user
     const updatedUserRes = await query(

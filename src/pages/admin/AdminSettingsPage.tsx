@@ -75,12 +75,12 @@ export const AdminSettingsPage: React.FC = () => {
       const res = await adminService.getProfile();
       if (res) {
         const loaded = {
-          fullName: res.full_name || res.fullName || res.name || 'Dr. Arvind Mehra (Lead Guide)',
-          username: res.username || 'admin',
+          fullName: res.full_name || res.fullName || res.name || 'Dr. Irfan Khan',
+          username: res.username || 'irfankhan1917',
           email: res.email || 'admin@researchflow.com',
-          phone: res.phone || '+91 98111 22233',
+          phone: res.phone || '+91 9616508786',
           avatarUrl: res.avatar_url || res.avatarUrl || DEFAULT_AVATAR,
-          role: res.role || 'admin',
+          role: 'Super Administrator',
         };
         setProfileData(loaded);
         setFormData({
@@ -90,6 +90,7 @@ export const AdminSettingsPage: React.FC = () => {
           phone: loaded.phone,
           avatarUrl: loaded.avatarUrl,
         });
+        window.dispatchEvent(new CustomEvent('adminProfileUpdated', { detail: loaded }));
       }
     } catch (err) {
       console.error('Error loading admin profile:', err);
@@ -376,7 +377,7 @@ export const AdminSettingsPage: React.FC = () => {
                   <div className="mt-1.5">
                     <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary">
                       <ShieldCheck className="w-3.5 h-3.5" />
-                      Lead Research Director
+                      Super Administrator
                     </span>
                   </div>
                 </div>

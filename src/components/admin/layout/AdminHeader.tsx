@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Bell, Menu, User, Settings, LogOut, ChevronDown } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
+import { adminService } from '../../../services/adminService';
 
 interface AdminHeaderProps {
   onToggleSidebar?: () => void;
@@ -51,6 +52,23 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onToggleSidebar }) => 
   const [adminName, setAdminName] = useState<string>(getInitialAdminName);
   const [adminEmail, setAdminEmail] = useState<string>(getInitialAdminEmail);
   const [adminAvatar, setAdminAvatar] = useState<string>(getInitialAdminAvatar);
+
+  // Sync with backend database directly on mount so hard refresh always keeps the saved photo & name
+  useEffect(() => {
+    adminService.getProfile().then((userData) => {
+      if (userData) {
+        if (userData.full_name || userData.fullName || userData.name) {
+          setAdminName(userData.full_name || userData.fullName || userData.name);
+        }
+        if (userData.email) {
+          setAdminEmail(userData.email);
+        }
+        if (userData.avatar_url || userData.avatarUrl) {
+          setAdminAvatar(userData.avatar_url || userData.avatarUrl);
+        }
+      }
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     const handleProfileUpdate = (e?: any) => {
@@ -151,7 +169,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onToggleSidebar }) => 
                 {adminName}
               </span>
               <span className="block text-[10px] text-editorial-muted font-medium mt-0.5">
-                Lead Director
+                Super Administrator
               </span>
             </div>
             <ChevronDown className="w-3.5 h-3.5 text-editorial-muted hidden sm:inline-block" />
