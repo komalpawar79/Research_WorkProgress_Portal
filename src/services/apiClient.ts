@@ -1,6 +1,12 @@
+const isLocalhost =
+  typeof window !== 'undefined' &&
+  (window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1' ||
+    window.location.hostname === '::1');
+
 export const BACKEND_URL =
   import.meta.env.VITE_BACKEND_URL ||
-  (import.meta.env.DEV ? 'http://localhost:5000' : '');
+  (isLocalhost || import.meta.env.DEV ? 'http://localhost:5000' : '');
 
 export async function fetchApi<T = any>(
   endpoint: string,
@@ -42,10 +48,31 @@ export async function fetchApi<T = any>(
     headers,
   });
 
+  const contentType = response.headers.get('content-type') || '';
+
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.error || `Request failed with status ${response.status}`);
+    let errorMessage = `Request failed with status ${response.status}`;
+    if (contentType.includes('application/json')) {
+      const errorData = await response.json().catch(() => ({}));
+      errorMessage = errorData.error || errorMessage;
+    }
+    throw new Error(errorMessage);
   }
 
-  return response.json();
+  if (contentType.includes('application/json')) {
+    return response.json();
+  }
+
+  const text = await response.text();
+  if (text.trim().startsWith('<')) {
+    throw new Error(
+      `Endpoint ${endpoint} returned HTML instead of JSON. Ensure backend service is running.`
+    );
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error(`Invalid JSON response from ${endpoint}`);
+  }
 }
