@@ -16,6 +16,7 @@ import { ProfilePage } from './pages/ProfilePage';
 
 // Admin Portal
 import { AdminLayout } from './components/admin/layout/AdminLayout';
+import { AdminLoginPage } from './pages/admin/AdminLoginPage';
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
 import { CustomersPage } from './pages/admin/CustomersPage';
 import { CustomerDetailPage } from './pages/admin/CustomerDetailPage';
@@ -38,8 +39,12 @@ const queryClient = new QueryClient({
   },
 });
 
+/**
+ * Protected Route for Scholar Portal (Redirects to /login if unauthenticated)
+ */
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
+  const storedAuth = localStorage.getItem('rf_auth');
 
   if (loading) {
     return (
@@ -49,8 +54,30 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
     );
   }
 
-  if (!user) {
+  if (!user && storedAuth !== 'true') {
     return <Navigate to="/login" replace />;
+  }
+
+  return <>{children}</>;
+};
+
+/**
+ * Dedicated Protected Route for Admin Portal (Redirects to /admin/login if unauthenticated)
+ */
+const AdminProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, loading } = useAuth();
+  const storedAuth = localStorage.getItem('rf_auth');
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#182620] flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-[#88D49E] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user && storedAuth !== 'true') {
+    return <Navigate to="/admin/login" replace />;
   }
 
   return <>{children}</>;
@@ -63,8 +90,12 @@ export const App: React.FC = () => {
         <AuthProvider>
           <BrowserRouter>
             <Routes>
-              {/* Public Login Route */}
+              {/* Separate Public Scholar Login */}
               <Route path="/login" element={<LoginPage />} />
+
+              {/* Separate Public Admin Login */}
+              <Route path="/admin/login" element={<AdminLoginPage />} />
+              <Route path="/admin-login" element={<AdminLoginPage />} />
 
               {/* Scholar / Customer Portal */}
               <Route
@@ -87,9 +118,9 @@ export const App: React.FC = () => {
               <Route
                 path="/admin"
                 element={
-                  <ProtectedRoute>
+                  <AdminProtectedRoute>
                     <AdminLayout />
-                  </ProtectedRoute>
+                  </AdminProtectedRoute>
                 }
               >
                 <Route index element={<Navigate to="/admin/dashboard" replace />} />

@@ -6,8 +6,6 @@ import {
   User,
   Mail,
   Phone,
-  Building,
-  GraduationCap,
   Pencil,
   Save,
   X,
@@ -30,8 +28,6 @@ export const AdminSettingsPage: React.FC = () => {
     username: 'admin',
     email: 'admin@researchflow.com',
     phone: '+91 98111 22233',
-    university: 'Indian Institute of Technology, Delhi',
-    department: 'Computer Science & Engineering',
     role: 'admin',
   });
 
@@ -40,8 +36,6 @@ export const AdminSettingsPage: React.FC = () => {
     username: '',
     email: '',
     phone: '',
-    university: '',
-    department: '',
   });
 
   // Password State
@@ -60,12 +54,10 @@ export const AdminSettingsPage: React.FC = () => {
       const res = await adminService.getProfile();
       if (res) {
         const loaded = {
-          fullName: res.full_name || res.fullName || 'Dr. Arvind Mehra (Lead Guide)',
+          fullName: res.full_name || res.fullName || res.name || 'Dr. Arvind Mehra (Lead Guide)',
           username: res.username || 'admin',
           email: res.email || 'admin@researchflow.com',
           phone: res.phone || '+91 98111 22233',
-          university: res.university || 'Indian Institute of Technology, Delhi',
-          department: res.department || 'Computer Science & Engineering',
           role: res.role || 'admin',
         };
         setProfileData(loaded);
@@ -74,8 +66,6 @@ export const AdminSettingsPage: React.FC = () => {
           username: loaded.username,
           email: loaded.email,
           phone: loaded.phone,
-          university: loaded.university,
-          department: loaded.department,
         });
       }
     } catch (err) {
@@ -91,8 +81,6 @@ export const AdminSettingsPage: React.FC = () => {
       username: profileData.username,
       email: profileData.email,
       phone: profileData.phone,
-      university: profileData.university,
-      department: profileData.department,
     });
     setIsEditing(true);
   };
@@ -115,25 +103,36 @@ export const AdminSettingsPage: React.FC = () => {
     try {
       setSaving(true);
       const res = await adminService.updateProfile({
-        fullName: formData.fullName,
-        username: formData.username,
-        email: formData.email,
-        phone: formData.phone,
-        university: formData.university,
-        department: formData.department,
+        fullName: formData.fullName.trim(),
+        username: formData.username.trim(),
+        email: formData.email.trim(),
+        phone: formData.phone.trim(),
       });
 
       if (res && (res.success || res.user)) {
-        showToast('Admin personal information updated successfully!', 'success');
+        const updatedAdmin = {
+          id: res.user?.id || 'usr-admin-01',
+          full_name: formData.fullName.trim(),
+          name: formData.fullName.trim(),
+          username: formData.username.trim(),
+          email: formData.email.trim(),
+          phone: formData.phone.trim(),
+          role: 'admin',
+        };
+
+        // Instantly update localStorage & notify AdminHeader across the app
+        localStorage.setItem('rf_user', JSON.stringify(updatedAdmin));
+        window.dispatchEvent(new CustomEvent('adminProfileUpdated', { detail: updatedAdmin }));
+
         setProfileData({
           ...profileData,
-          fullName: formData.fullName,
-          username: formData.username,
-          email: formData.email,
-          phone: formData.phone,
-          university: formData.university,
-          department: formData.department,
+          fullName: formData.fullName.trim(),
+          username: formData.username.trim(),
+          email: formData.email.trim(),
+          phone: formData.phone.trim(),
         });
+
+        showToast('Admin personal information updated successfully!', 'success');
         setIsEditing(false);
       } else {
         showToast(res?.message || 'Failed to update profile.', 'error');
@@ -164,7 +163,7 @@ export const AdminSettingsPage: React.FC = () => {
       });
 
       if (res && res.success) {
-        showToast('Admin password updated successfully!', 'success');
+        showToast('Admin password updated successfully in database!', 'success');
         setCurrentPassword('');
         setNewPassword('');
         setConfirmPassword('');
@@ -187,7 +186,7 @@ export const AdminSettingsPage: React.FC = () => {
             Admin Profile & Settings
           </h1>
           <p className="text-xs sm:text-sm text-editorial-muted mt-1">
-            Manage your personal profile information, institutional credentials, and security settings.
+            Manage your personal profile information, administrative username, and account security.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -208,7 +207,7 @@ export const AdminSettingsPage: React.FC = () => {
                 Personal Information
               </h3>
               <p className="text-xs text-editorial-muted">
-                Admin contact & institutional identity
+                Admin contact & administrative identity
               </p>
             </div>
 
@@ -241,7 +240,7 @@ export const AdminSettingsPage: React.FC = () => {
           ) : !isEditing ? (
             /* Read-Only View */
             <div className="space-y-4 text-xs sm:text-sm">
-              <div className="flex items-start justify-between py-2 border-b border-border/50">
+              <div className="flex items-start justify-between py-2.5 border-b border-border/50">
                 <span className="text-editorial-muted font-medium flex items-center gap-2">
                   <User className="w-4 h-4 text-primary" />
                   Full Name
@@ -251,17 +250,17 @@ export const AdminSettingsPage: React.FC = () => {
                 </span>
               </div>
 
-              <div className="flex items-start justify-between py-2 border-b border-border/50">
+              <div className="flex items-start justify-between py-2.5 border-b border-border/50">
                 <span className="text-editorial-muted font-medium flex items-center gap-2">
                   <ShieldCheck className="w-4 h-4 text-primary" />
                   Username
                 </span>
-                <span className="font-mono font-medium text-editorial-dark text-right bg-background px-2 py-0.5 rounded border border-border">
+                <span className="font-mono font-medium text-editorial-dark text-right bg-background px-2.5 py-0.5 rounded border border-border">
                   @{profileData.username}
                 </span>
               </div>
 
-              <div className="flex items-start justify-between py-2 border-b border-border/50">
+              <div className="flex items-start justify-between py-2.5 border-b border-border/50">
                 <span className="text-editorial-muted font-medium flex items-center gap-2">
                   <Mail className="w-4 h-4 text-primary" />
                   Email Address
@@ -271,7 +270,7 @@ export const AdminSettingsPage: React.FC = () => {
                 </span>
               </div>
 
-              <div className="flex items-start justify-between py-2 border-b border-border/50">
+              <div className="flex items-start justify-between py-2.5 border-b border-border/50">
                 <span className="text-editorial-muted font-medium flex items-center gap-2">
                   <Phone className="w-4 h-4 text-primary" />
                   Phone Number
@@ -281,33 +280,13 @@ export const AdminSettingsPage: React.FC = () => {
                 </span>
               </div>
 
-              <div className="flex items-start justify-between py-2 border-b border-border/50">
-                <span className="text-editorial-muted font-medium flex items-center gap-2">
-                  <Building className="w-4 h-4 text-primary" />
-                  University / Institute
-                </span>
-                <span className="font-semibold text-editorial-dark text-right max-w-[60%]">
-                  {profileData.university}
-                </span>
-              </div>
-
-              <div className="flex items-start justify-between py-2 border-b border-border/50">
-                <span className="text-editorial-muted font-medium flex items-center gap-2">
-                  <GraduationCap className="w-4 h-4 text-primary" />
-                  Department
-                </span>
-                <span className="font-semibold text-editorial-dark text-right">
-                  {profileData.department}
-                </span>
-              </div>
-
-              <div className="flex items-start justify-between py-2">
+              <div className="flex items-start justify-between py-2.5">
                 <span className="text-editorial-muted font-medium flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                  Role / Designation
+                  Role / Access
                 </span>
                 <span className="font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
-                  Lead Research Director
+                  Super Administrator
                 </span>
               </div>
             </div>
@@ -367,32 +346,6 @@ export const AdminSettingsPage: React.FC = () => {
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   placeholder="+91 98111 22233"
                   className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-background focus:bg-white border border-border rounded-xl outline-none focus:border-primary text-editorial-dark transition-all font-mono"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-editorial-dark mb-1">
-                  University / College / Institute
-                </label>
-                <input
-                  type="text"
-                  value={formData.university}
-                  onChange={(e) => setFormData({ ...formData, university: e.target.value })}
-                  placeholder="e.g. Indian Institute of Technology, Delhi"
-                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-background focus:bg-white border border-border rounded-xl outline-none focus:border-primary text-editorial-dark transition-all"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-editorial-dark mb-1">
-                  Department
-                </label>
-                <input
-                  type="text"
-                  value={formData.department}
-                  onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                  placeholder="e.g. Computer Science & Engineering"
-                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-background focus:bg-white border border-border rounded-xl outline-none focus:border-primary text-editorial-dark transition-all"
                 />
               </div>
 
@@ -513,5 +466,3 @@ export const AdminSettingsPage: React.FC = () => {
     </div>
   );
 };
-
-

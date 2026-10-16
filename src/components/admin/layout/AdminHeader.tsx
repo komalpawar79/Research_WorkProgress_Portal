@@ -13,22 +13,62 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onToggleSidebar }) => 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Dynamic admin display
-  let adminName = user?.full_name || 'Admin';
-  let adminEmail = user?.email || 'admin@researchflow.com';
+  const getInitialAdminName = () => {
+    try {
+      const cached = localStorage.getItem('rf_user');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        return parsed.full_name || parsed.fullName || parsed.name || 'Admin';
+      }
+    } catch {}
+    return user?.full_name || 'Admin';
+  };
 
-  try {
-    const cached = localStorage.getItem('rf_user');
-    if (cached) {
-      const parsed = JSON.parse(cached);
-      if (parsed.full_name || parsed.fullName) {
-        adminName = parsed.full_name || parsed.fullName;
+  const getInitialAdminEmail = () => {
+    try {
+      const cached = localStorage.getItem('rf_user');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        return parsed.email || 'admin@researchflow.com';
       }
-      if (parsed.email) {
-        adminEmail = parsed.email;
-      }
-    }
-  } catch {}
+    } catch {}
+    return user?.email || 'admin@researchflow.com';
+  };
+
+  const [adminName, setAdminName] = useState<string>(getInitialAdminName);
+  const [adminEmail, setAdminEmail] = useState<string>(getInitialAdminEmail);
+
+  useEffect(() => {
+    const handleProfileUpdate = (e?: any) => {
+      try {
+        const cached = localStorage.getItem('rf_user');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed.full_name || parsed.fullName || parsed.name) {
+            setAdminName(parsed.full_name || parsed.fullName || parsed.name);
+          }
+          if (parsed.email) {
+            setAdminEmail(parsed.email);
+          }
+        } else if (e?.detail) {
+          if (e.detail.full_name || e.detail.fullName || e.detail.name) {
+            setAdminName(e.detail.full_name || e.detail.fullName || e.detail.name);
+          }
+          if (e.detail.email) {
+            setAdminEmail(e.detail.email);
+          }
+        }
+      } catch {}
+    };
+
+    window.addEventListener('adminProfileUpdated', handleProfileUpdate);
+    window.addEventListener('storage', handleProfileUpdate);
+
+    return () => {
+      window.removeEventListener('adminProfileUpdated', handleProfileUpdate);
+      window.removeEventListener('storage', handleProfileUpdate);
+    };
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -134,7 +174,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onToggleSidebar }) => 
                 onClick={async () => {
                   setDropdownOpen(false);
                   await logout();
-                  navigate('/login');
+                  navigate('/admin/login');
                 }}
                 className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs text-rose-600 hover:bg-rose-50 text-left transition-colors border-t border-border/40 mt-1"
               >

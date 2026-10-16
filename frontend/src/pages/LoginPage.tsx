@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Lock, Eye, EyeOff, Shield, ArrowRight, Layers, GraduationCap, ShieldCheck } from 'lucide-react';
+import { User, Lock, Eye, EyeOff, Shield, ArrowRight, Layers, GraduationCap } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 
@@ -52,17 +52,6 @@ export const LoginPage: React.FC = () => {
     }
   };
 
-  const handleDemoAdminLogin = async () => {
-    setEmail('admin@researchflow.com');
-    setPassword('admin123');
-    setLoading(true);
-    const res = await login('admin@researchflow.com', 'admin123');
-    setLoading(false);
-    if (res.success) {
-      showToast('Welcome to Admin Console (Super Admin)', 'success');
-      navigate('/admin/dashboard');
-    }
-  };
 
   return (
     <div className="min-h-screen bg-[#F4F1EA] flex items-center justify-center p-4 sm:p-6 lg:p-10">
@@ -210,29 +199,31 @@ export const LoginPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleDemoScholarLogin}
-                  className="w-full py-2 px-3 rounded-xl border border-dashed border-[#B78352] text-[#B78352] hover:bg-[#FBF6F0] text-xs font-semibold transition-colors flex items-center justify-center gap-2"
+                  className="w-full py-2.5 px-3 rounded-xl border border-dashed border-[#B78352] text-[#B78352] hover:bg-[#FBF6F0] text-xs font-semibold transition-colors flex items-center justify-center gap-2"
                 >
                   <User className="w-3.5 h-3.5" />
-                  <span>Scholar Demo (Rahul Sharma)</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleDemoAdminLogin}
-                  className="w-full py-2 px-3 rounded-xl border border-dashed border-[#263A33] text-[#263A33] hover:bg-[#EAF3EC] text-xs font-semibold transition-colors flex items-center justify-center gap-2"
-                >
-                  <ShieldCheck className="w-3.5 h-3.5 text-[#266C44]" />
-                  <span>Admin Console Demo (Super Admin)</span>
+                  <span>Quick Demo Scholar Login (Rahul Sharma)</span>
                 </button>
               </div>
             </form>
           </div>
 
-          <div className="pt-6 mt-6 border-t border-border/60 flex items-center justify-center gap-2 text-[11px] text-editorial-muted text-center">
-            <Shield className="w-3.5 h-3.5 text-[#266C44] flex-shrink-0" />
-            <span>
-              Your data is secure and confidential. We respect your privacy.
-            </span>
+          {/* Switch to Dedicated Admin Login */}
+          <div className="pt-6 mt-6 border-t border-border/60 text-center space-y-2">
+            <p className="text-xs text-editorial-muted">
+              Are you an Administrator?{' '}
+              <button
+                type="button"
+                onClick={() => navigate('/admin/login')}
+                className="font-semibold text-primary hover:underline inline-flex items-center gap-1"
+              >
+                Go to Dedicated Admin Login &rarr;
+              </button>
+            </p>
+            <div className="flex items-center justify-center gap-1.5 text-[11px] text-editorial-muted">
+              <Shield className="w-3.5 h-3.5 text-[#266C44] flex-shrink-0" />
+              <span>Your research data and intellectual property are encrypted.</span>
+            </div>
           </div>
         </div>
       </div>
