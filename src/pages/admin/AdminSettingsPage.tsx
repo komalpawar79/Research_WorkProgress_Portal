@@ -365,7 +365,6 @@ export const AdminSettingsPage: React.FC = () => {
                     alt={profileData.fullName}
                     className="w-20 h-20 rounded-full object-cover ring-4 ring-primary/20 shadow-md bg-background"
                   />
-                  <span className="absolute bottom-1 right-1 w-4 h-4 rounded-full bg-emerald-500 ring-2 ring-white" title="Active Administrator" />
                 </div>
                 <div>
                   <h4 className="font-serif text-lg font-bold text-editorial-dark leading-tight">
