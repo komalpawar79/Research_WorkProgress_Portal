@@ -117,13 +117,12 @@ export const adminService = {
     }
     return {
       id: 'usr-admin-01',
-      username: 'admin',
+      username: 'irfankhan1917',
       email: 'admin@researchflow.com',
-      full_name: 'Dr. Arvind Mehra (Lead Guide)',
+      full_name: 'Dr. Irfan Khan',
       phone: '+91 98111 22233',
-      university: 'Indian Institute of Technology, Delhi',
-      department: 'Computer Science & Engineering',
       role: 'admin',
+      avatar_url: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=120&auto=format&fit=crop&q=80',
     };
   },
 

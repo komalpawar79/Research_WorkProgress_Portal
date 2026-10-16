@@ -647,9 +647,9 @@ export const getAdminProfile = async (req: Request, res: Response): Promise<void
   const adminId = req.user?.userId || 'usr-admin-01';
   const defaultAdmin = {
     id: 'usr-admin-01',
-    username: 'admin',
+    username: 'irfankhan1917',
     email: 'admin@researchflow.com',
-    full_name: 'Dr. Arvind Mehra (Lead Guide)',
+    full_name: 'Dr. Irfan Khan',
     phone: '+91 98111 22233',
     role: 'admin',
     status: 'Active',
@@ -664,7 +664,7 @@ export const getAdminProfile = async (req: Request, res: Response): Promise<void
 
     // 2. Query admin user safely with SELECT *
     const userResult = await query(
-      `SELECT * FROM users WHERE id = $1 OR role = 'admin' LIMIT 1`,
+      `SELECT * FROM users WHERE id = $1 OR role = 'admin' ORDER BY CASE WHEN id = $1 THEN 0 ELSE 1 END LIMIT 1`,
       [adminId]
     ).catch(() => ({ rows: [] }));
 
@@ -674,7 +674,7 @@ export const getAdminProfile = async (req: Request, res: Response): Promise<void
         success: true,
         user: {
           id: admin.id || defaultAdmin.id,
-          username: admin.username || 'admin',
+          username: admin.username || defaultAdmin.username,
           email: admin.email || defaultAdmin.email,
           full_name: admin.full_name || defaultAdmin.full_name,
           phone: admin.phone || defaultAdmin.phone,
@@ -690,9 +690,9 @@ export const getAdminProfile = async (req: Request, res: Response): Promise<void
     try {
       await query(
         `INSERT INTO users (id, username, email, full_name, role, phone, avatar_url, status)
-         VALUES ($1, 'admin', 'admin@researchflow.com', 'Dr. Arvind Mehra (Lead Guide)', 'admin', '+91 98111 22233', $2, 'Active')
+         VALUES ($1, $2, $3, $4, 'admin', $5, $6, 'Active')
          ON CONFLICT (id) DO NOTHING`,
-        [adminId, defaultAdmin.avatar_url]
+        [adminId, defaultAdmin.username, defaultAdmin.email, defaultAdmin.full_name, defaultAdmin.phone, defaultAdmin.avatar_url]
       );
     } catch {}
 
@@ -729,7 +729,7 @@ export const updateAdminProfile = async (req: Request, res: Response): Promise<v
 
     // Check if target user exists, if not create
     const checkUser = await query(
-      `SELECT id FROM users WHERE id = $1 OR role = 'admin' LIMIT 1`,
+      `SELECT id FROM users WHERE id = $1 OR role = 'admin' ORDER BY CASE WHEN id = $1 THEN 0 ELSE 1 END LIMIT 1`,
       [adminId]
     ).catch(() => ({ rows: [] }));
 
@@ -741,9 +741,9 @@ export const updateAdminProfile = async (req: Request, res: Response): Promise<v
          ON CONFLICT (id) DO NOTHING`,
         [
           adminId,
-          username || 'admin',
+          username || 'irfankhan1917',
           email || 'admin@researchflow.com',
-          fullName || 'Dr. Arvind Mehra (Lead Guide)',
+          fullName || 'Dr. Irfan Khan',
           phone || '+91 98111 22233',
           avatarUrl || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80',
         ]
@@ -772,16 +772,24 @@ export const updateAdminProfile = async (req: Request, res: Response): Promise<v
       ]
     ).catch(() => {});
 
+    // Fetch the updated user
+    const updatedUserRes = await query(
+      `SELECT * FROM users WHERE id = $1 LIMIT 1`,
+      [targetId]
+    ).catch(() => ({ rows: [] }));
+
+    const u = (updatedUserRes.rows && updatedUserRes.rows[0]) || {};
+
     res.status(200).json({
       success: true,
       message: 'Admin profile updated successfully.',
       user: {
         id: targetId,
-        username: username || 'admin',
-        email: email || 'admin@researchflow.com',
-        full_name: fullName || 'Dr. Arvind Mehra (Lead Guide)',
-        phone: phone || '+91 98111 22233',
-        avatar_url: avatarUrl || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80',
+        username: u.username || username || 'irfankhan1917',
+        email: u.email || email || 'admin@researchflow.com',
+        full_name: u.full_name || fullName || 'Dr. Irfan Khan',
+        phone: u.phone || phone || '+91 98111 22233',
+        avatar_url: u.avatar_url || avatarUrl || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80',
         role: 'admin',
         status: 'Active',
       },
@@ -793,9 +801,9 @@ export const updateAdminProfile = async (req: Request, res: Response): Promise<v
       message: 'Admin profile updated.',
       user: {
         id: adminId,
-        username: username || 'admin',
+        username: username || 'irfankhan1917',
         email: email || 'admin@researchflow.com',
-        full_name: fullName || 'Dr. Arvind Mehra (Lead Guide)',
+        full_name: fullName || 'Dr. Irfan Khan',
         phone: phone || '+91 98111 22233',
         avatar_url: avatarUrl || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80',
         role: 'admin',

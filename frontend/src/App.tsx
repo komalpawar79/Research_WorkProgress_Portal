@@ -88,7 +88,7 @@ export const App: React.FC = () => {
     <QueryClientProvider client={queryClient}>
       <ToastProvider>
         <AuthProvider>
-          <BrowserRouter>
+          <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
             <Routes>
               {/* Separate Public Scholar Login */}
               <Route path="/login" element={<LoginPage />} />
