@@ -156,7 +156,7 @@ export const AdminSettingsPage: React.FC = () => {
     });
   };
 
-  // Local file upload handler with automatic client-side compression
+  // Local file upload handler with automatic client-side compression & size validation
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -166,12 +166,28 @@ export const AdminSettingsPage: React.FC = () => {
       return;
     }
 
+    // Check maximum hard limit (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      showToast(
+        `Image is too large (${(file.size / (1024 * 1024)).toFixed(1)}MB)! Maximum allowed size is 5MB. Please choose an image under 2MB.`,
+        'error'
+      );
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      showToast(
+        `Image is ${(file.size / (1024 * 1024)).toFixed(1)}MB (larger than 2MB). Auto-compressing to 256×256 px...`,
+        'info'
+      );
+    }
+
     try {
       const compressedBase64 = await compressImage(file);
       setFormData((prev) => ({ ...prev, avatarUrl: compressedBase64 }));
-      showToast('Profile photo optimized! Click "Save Changes" to apply.', 'info');
+      showToast('Profile photo optimized! Click "Save Changes" to apply.', 'success');
     } catch {
-      showToast('Could not process image file. Please try another image.', 'error');
+      showToast('Could not process image file. Please choose a standard JPG or PNG.', 'error');
     }
   };
 
@@ -474,7 +490,7 @@ export const AdminSettingsPage: React.FC = () => {
                     </div>
 
                     <p className="text-[11px] text-editorial-muted">
-                      JPG, PNG, or WEBP. Max 5MB. Real-time header sync enabled.
+                      Recommended: <strong>Square 1:1 (256×256 px)</strong>, JPG, PNG or WEBP under 2MB (Max 5MB). Auto-compressed for instant loading.
                     </p>
                   </div>
                 </div>
