@@ -10,6 +10,8 @@ import {
   Save,
   X,
   Lock,
+  Eye,
+  EyeOff,
   ShieldCheck,
   Loader2,
   CheckCircle2,
@@ -42,6 +44,9 @@ export const AdminSettingsPage: React.FC = () => {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [updatingPassword, setUpdatingPassword] = useState(false);
 
   useEffect(() => {
@@ -398,43 +403,76 @@ export const AdminSettingsPage: React.FC = () => {
               <label className="block text-xs font-medium text-editorial-muted mb-1">
                 Current Password
               </label>
-              <input
-                type="password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                placeholder="Enter current password (if set)"
-                className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-background/50 focus:bg-white border border-border rounded-xl outline-none focus:border-primary text-editorial-dark transition-all"
-              />
+              <div className="relative">
+                <input
+                  type={showCurrentPassword ? 'text' : 'password'}
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder="Enter current password (if set)"
+                  className="w-full pl-3.5 pr-10 py-2.5 text-xs sm:text-sm bg-background/50 focus:bg-white border border-border rounded-xl outline-none focus:border-primary text-editorial-dark transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-editorial-muted hover:text-editorial-dark transition-colors p-0.5"
+                  title={showCurrentPassword ? 'Hide password' : 'Show password'}
+                  tabIndex={-1}
+                >
+                  {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
 
             <div>
               <label className="block text-xs font-medium text-editorial-muted mb-1">
                 New Password <span className="text-red-500">*</span>
               </label>
-              <input
-                type="password"
-                required
-                minLength={6}
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="At least 6 characters"
-                className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-background/50 focus:bg-white border border-border rounded-xl outline-none focus:border-primary text-editorial-dark transition-all"
-              />
+              <div className="relative">
+                <input
+                  type={showNewPassword ? 'text' : 'password'}
+                  required
+                  minLength={6}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="At least 6 characters"
+                  className="w-full pl-3.5 pr-10 py-2.5 text-xs sm:text-sm bg-background/50 focus:bg-white border border-border rounded-xl outline-none focus:border-primary text-editorial-dark transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-editorial-muted hover:text-editorial-dark transition-colors p-0.5"
+                  title={showNewPassword ? 'Hide password' : 'Show password'}
+                  tabIndex={-1}
+                >
+                  {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
 
             <div>
               <label className="block text-xs font-medium text-editorial-muted mb-1">
                 Confirm New Password <span className="text-red-500">*</span>
               </label>
-              <input
-                type="password"
-                required
-                minLength={6}
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Re-enter new password"
-                className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-background/50 focus:bg-white border border-border rounded-xl outline-none focus:border-primary text-editorial-dark transition-all"
-              />
+              <div className="relative">
+                <input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  required
+                  minLength={6}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Re-enter new password"
+                  className="w-full pl-3.5 pr-10 py-2.5 text-xs sm:text-sm bg-background/50 focus:bg-white border border-border rounded-xl outline-none focus:border-primary text-editorial-dark transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-editorial-muted hover:text-editorial-dark transition-colors p-0.5"
+                  title={showConfirmPassword ? 'Hide password' : 'Show password'}
+                  tabIndex={-1}
+                >
+                  {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
 
             <button
