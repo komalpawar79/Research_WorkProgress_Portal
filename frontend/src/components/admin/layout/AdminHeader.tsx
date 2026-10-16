@@ -35,8 +35,22 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onToggleSidebar }) => 
     return user?.email || 'admin@researchflow.com';
   };
 
+  const defaultAdminAvatar = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=120&auto=format&fit=crop&q=80';
+
+  const getInitialAdminAvatar = () => {
+    try {
+      const cached = localStorage.getItem('rf_user');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        return parsed.avatar_url || parsed.avatarUrl || defaultAdminAvatar;
+      }
+    } catch {}
+    return defaultAdminAvatar;
+  };
+
   const [adminName, setAdminName] = useState<string>(getInitialAdminName);
   const [adminEmail, setAdminEmail] = useState<string>(getInitialAdminEmail);
+  const [adminAvatar, setAdminAvatar] = useState<string>(getInitialAdminAvatar);
 
   useEffect(() => {
     const handleProfileUpdate = (e?: any) => {
@@ -50,12 +64,18 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onToggleSidebar }) => 
           if (parsed.email) {
             setAdminEmail(parsed.email);
           }
+          if (parsed.avatar_url || parsed.avatarUrl) {
+            setAdminAvatar(parsed.avatar_url || parsed.avatarUrl);
+          }
         } else if (e?.detail) {
           if (e.detail.full_name || e.detail.fullName || e.detail.name) {
             setAdminName(e.detail.full_name || e.detail.fullName || e.detail.name);
           }
           if (e.detail.email) {
             setAdminEmail(e.detail.email);
+          }
+          if (e.detail.avatar_url || e.detail.avatarUrl) {
+            setAdminAvatar(e.detail.avatar_url || e.detail.avatarUrl);
           }
         }
       } catch {}
@@ -122,7 +142,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onToggleSidebar }) => 
             className="flex items-center gap-2.5 p-1 sm:px-2 sm:py-1 rounded-xl hover:bg-background transition-colors"
           >
             <img
-              src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=120&auto=format&fit=crop&q=80"
+              src={adminAvatar}
               alt="Admin Avatar"
               className="w-8 h-8 rounded-full object-cover ring-1 ring-border"
             />

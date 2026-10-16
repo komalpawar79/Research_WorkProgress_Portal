@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useToast } from '../../context/ToastContext';
 import { BotanicalIllustration } from '../../components/dashboard/BotanicalIllustration';
 import { adminService } from '../../services/adminService';
@@ -15,10 +15,24 @@ import {
   ShieldCheck,
   Loader2,
   CheckCircle2,
+  Camera,
+  Upload,
+  RefreshCw,
+  Sparkles,
 } from 'lucide-react';
+
+const DEFAULT_AVATAR = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&auto=format&fit=crop&q=80';
+
+const PRESET_AVATARS = [
+  { label: 'Executive Male', url: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&auto=format&fit=crop&q=80' },
+  { label: 'Director Female', url: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&auto=format&fit=crop&q=80' },
+  { label: 'Academic Mentor', url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80' },
+  { label: 'Senior Guide', url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80' },
+];
 
 export const AdminSettingsPage: React.FC = () => {
   const { showToast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Profile State
   const [loading, setLoading] = useState(true);
@@ -30,6 +44,7 @@ export const AdminSettingsPage: React.FC = () => {
     username: 'admin',
     email: 'admin@researchflow.com',
     phone: '+91 98111 22233',
+    avatarUrl: DEFAULT_AVATAR,
     role: 'admin',
   });
 
@@ -38,6 +53,7 @@ export const AdminSettingsPage: React.FC = () => {
     username: '',
     email: '',
     phone: '',
+    avatarUrl: DEFAULT_AVATAR,
   });
 
   // Password State
@@ -63,6 +79,7 @@ export const AdminSettingsPage: React.FC = () => {
           username: res.username || 'admin',
           email: res.email || 'admin@researchflow.com',
           phone: res.phone || '+91 98111 22233',
+          avatarUrl: res.avatar_url || res.avatarUrl || DEFAULT_AVATAR,
           role: res.role || 'admin',
         };
         setProfileData(loaded);
@@ -71,6 +88,7 @@ export const AdminSettingsPage: React.FC = () => {
           username: loaded.username,
           email: loaded.email,
           phone: loaded.phone,
+          avatarUrl: loaded.avatarUrl,
         });
       }
     } catch (err) {
@@ -86,12 +104,39 @@ export const AdminSettingsPage: React.FC = () => {
       username: profileData.username,
       email: profileData.email,
       phone: profileData.phone,
+      avatarUrl: profileData.avatarUrl,
     });
     setIsEditing(true);
   };
 
   const handleCancelEdit = () => {
     setIsEditing(false);
+  };
+
+  // Local file upload handler
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      showToast('Please select a valid image file (PNG, JPG, WEBP)', 'error');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('Image size should be less than 5MB', 'error');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64 = event.target?.result as string;
+      if (base64) {
+        setFormData((prev) => ({ ...prev, avatarUrl: base64 }));
+        showToast('Profile photo selected! Click "Save Changes" to apply.', 'info');
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSaveProfile = async (e: React.FormEvent) => {
@@ -112,6 +157,7 @@ export const AdminSettingsPage: React.FC = () => {
         username: formData.username.trim(),
         email: formData.email.trim(),
         phone: formData.phone.trim(),
+        avatarUrl: formData.avatarUrl,
       });
 
       if (res && (res.success || res.user)) {
@@ -122,6 +168,8 @@ export const AdminSettingsPage: React.FC = () => {
           username: formData.username.trim(),
           email: formData.email.trim(),
           phone: formData.phone.trim(),
+          avatar_url: formData.avatarUrl,
+          avatarUrl: formData.avatarUrl,
           role: 'admin',
         };
 
@@ -135,9 +183,10 @@ export const AdminSettingsPage: React.FC = () => {
           username: formData.username.trim(),
           email: formData.email.trim(),
           phone: formData.phone.trim(),
+          avatarUrl: formData.avatarUrl,
         });
 
-        showToast('Admin personal information updated successfully!', 'success');
+        showToast('Admin personal information & photo updated successfully!', 'success');
         setIsEditing(false);
       } else {
         showToast(res?.message || 'Failed to update profile.', 'error');
@@ -191,7 +240,7 @@ export const AdminSettingsPage: React.FC = () => {
             Admin Profile & Settings
           </h1>
           <p className="text-xs sm:text-sm text-editorial-muted mt-1">
-            Manage your personal profile information, administrative username, and account security.
+            Manage your personal profile photo, identity credentials, and administrative account security.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -244,60 +293,177 @@ export const AdminSettingsPage: React.FC = () => {
             </div>
           ) : !isEditing ? (
             /* Read-Only View */
-            <div className="space-y-4 text-xs sm:text-sm">
-              <div className="flex items-start justify-between py-2.5 border-b border-border/50">
-                <span className="text-editorial-muted font-medium flex items-center gap-2">
-                  <User className="w-4 h-4 text-primary" />
-                  Full Name
-                </span>
-                <span className="font-semibold text-editorial-dark text-right">
-                  {profileData.fullName}
-                </span>
+            <div className="space-y-5 text-xs sm:text-sm">
+              {/* Profile Photo Display */}
+              <div className="flex items-center gap-4 pb-4 border-b border-border/60">
+                <div className="relative">
+                  <img
+                    src={profileData.avatarUrl || DEFAULT_AVATAR}
+                    alt={profileData.fullName}
+                    className="w-20 h-20 rounded-full object-cover ring-4 ring-primary/20 shadow-md bg-background"
+                  />
+                  <span className="absolute bottom-1 right-1 w-4 h-4 rounded-full bg-emerald-500 ring-2 ring-white" title="Active Administrator" />
+                </div>
+                <div>
+                  <h4 className="font-serif text-lg font-bold text-editorial-dark leading-tight">
+                    {profileData.fullName}
+                  </h4>
+                  <span className="inline-block mt-1 font-mono text-xs text-editorial-muted bg-background px-2.5 py-0.5 rounded border border-border">
+                    @{profileData.username}
+                  </span>
+                  <div className="mt-1.5">
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary">
+                      <ShieldCheck className="w-3.5 h-3.5" />
+                      Lead Research Director
+                    </span>
+                  </div>
+                </div>
               </div>
 
-              <div className="flex items-start justify-between py-2.5 border-b border-border/50">
-                <span className="text-editorial-muted font-medium flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-primary" />
-                  Username
-                </span>
-                <span className="font-mono font-medium text-editorial-dark text-right bg-background px-2.5 py-0.5 rounded border border-border">
-                  @{profileData.username}
-                </span>
-              </div>
+              {/* Information Rows */}
+              <div className="space-y-4">
+                <div className="flex items-start justify-between py-2 border-b border-border/50">
+                  <span className="text-editorial-muted font-medium flex items-center gap-2">
+                    <User className="w-4 h-4 text-primary" />
+                    Full Name
+                  </span>
+                  <span className="font-semibold text-editorial-dark text-right">
+                    {profileData.fullName}
+                  </span>
+                </div>
 
-              <div className="flex items-start justify-between py-2.5 border-b border-border/50">
-                <span className="text-editorial-muted font-medium flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-primary" />
-                  Email Address
-                </span>
-                <span className="font-semibold text-editorial-dark text-right">
-                  {profileData.email}
-                </span>
-              </div>
+                <div className="flex items-start justify-between py-2 border-b border-border/50">
+                  <span className="text-editorial-muted font-medium flex items-center gap-2">
+                    <ShieldCheck className="w-4 h-4 text-primary" />
+                    Username
+                  </span>
+                  <span className="font-mono font-medium text-editorial-dark text-right bg-background px-2 py-0.5 rounded border border-border">
+                    @{profileData.username}
+                  </span>
+                </div>
 
-              <div className="flex items-start justify-between py-2.5 border-b border-border/50">
-                <span className="text-editorial-muted font-medium flex items-center gap-2">
-                  <Phone className="w-4 h-4 text-primary" />
-                  Phone Number
-                </span>
-                <span className="font-semibold text-editorial-dark font-mono text-right">
-                  {profileData.phone}
-                </span>
-              </div>
+                <div className="flex items-start justify-between py-2 border-b border-border/50">
+                  <span className="text-editorial-muted font-medium flex items-center gap-2">
+                    <Mail className="w-4 h-4 text-primary" />
+                    Email Address
+                  </span>
+                  <span className="font-semibold text-editorial-dark text-right">
+                    {profileData.email}
+                  </span>
+                </div>
 
-              <div className="flex items-start justify-between py-2.5">
-                <span className="text-editorial-muted font-medium flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                  Role / Access
-                </span>
-                <span className="font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
-                  Super Administrator
-                </span>
+                <div className="flex items-start justify-between py-2 border-b border-border/50">
+                  <span className="text-editorial-muted font-medium flex items-center gap-2">
+                    <Phone className="w-4 h-4 text-primary" />
+                    Phone Number
+                  </span>
+                  <span className="font-semibold text-editorial-dark font-mono text-right">
+                    {profileData.phone}
+                  </span>
+                </div>
+
+                <div className="flex items-start justify-between py-2">
+                  <span className="text-editorial-muted font-medium flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    Role / Access
+                  </span>
+                  <span className="font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                    Super Administrator
+                  </span>
+                </div>
               </div>
             </div>
           ) : (
             /* Editable Form View */
-            <form onSubmit={handleSaveProfile} className="space-y-4">
+            <form onSubmit={handleSaveProfile} className="space-y-5">
+              {/* Profile Photo Upload / Edit Section */}
+              <div className="p-4 bg-background/60 rounded-2xl border border-border/80 space-y-3">
+                <label className="block text-xs font-semibold text-editorial-dark">
+                  Profile Photo / Avatar
+                </label>
+
+                <div className="flex items-center gap-4">
+                  <div className="relative group shrink-0">
+                    <img
+                      src={formData.avatarUrl || DEFAULT_AVATAR}
+                      alt="Preview"
+                      className="w-18 h-18 sm:w-20 sm:h-20 rounded-full object-cover ring-2 ring-primary/30 shadow-sm bg-white"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white"
+                      title="Upload from computer"
+                    >
+                      <Camera className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  <div className="space-y-2 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        accept="image/*"
+                        onChange={handlePhotoUpload}
+                        className="hidden"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary text-xs font-semibold rounded-xl border border-primary/20 transition-all shadow-sm"
+                      >
+                        <Upload className="w-3.5 h-3.5" />
+                        Upload from Device
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, avatarUrl: DEFAULT_AVATAR })}
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-white hover:bg-background text-editorial-muted hover:text-editorial-dark text-xs rounded-xl border border-border transition-all"
+                      >
+                        <RefreshCw className="w-3 h-3" />
+                        Reset
+                      </button>
+                    </div>
+
+                    <p className="text-[11px] text-editorial-muted">
+                      JPG, PNG, or WEBP. Max 5MB. Real-time header sync enabled.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Quick Presets */}
+                <div className="pt-2 border-t border-border/60">
+                  <span className="block text-[11px] font-medium text-editorial-muted mb-2 flex items-center gap-1">
+                    <Sparkles className="w-3 h-3 text-[#C59B6D]" />
+                    Or Choose a Quick Professional Portrait:
+                  </span>
+                  <div className="flex items-center gap-3">
+                    {PRESET_AVATARS.map((preset, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, avatarUrl: preset.url })}
+                        className={`relative rounded-full p-0.5 transition-all ${
+                          formData.avatarUrl === preset.url
+                            ? 'ring-2 ring-primary scale-105'
+                            : 'opacity-70 hover:opacity-100 hover:scale-105'
+                        }`}
+                        title={preset.label}
+                      >
+                        <img
+                          src={preset.url}
+                          alt={preset.label}
+                          className="w-9 h-9 rounded-full object-cover"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Form Inputs */}
               <div>
                 <label className="block text-xs font-semibold text-editorial-dark mb-1">
                   Full Name <span className="text-red-500">*</span>

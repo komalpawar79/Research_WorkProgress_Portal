@@ -131,9 +131,8 @@ export const adminService = {
     fullName?: string;
     email?: string;
     phone?: string;
-    university?: string;
-    department?: string;
     username?: string;
+    avatarUrl?: string;
   }): Promise<any> {
     const res = await fetchApi<{ success: boolean; message: string; user: any }>('/api/admin/profile', {
       method: 'PUT',

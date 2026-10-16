@@ -690,11 +690,9 @@ export const getAdminProfile = async (req: Request, res: Response): Promise<void
         email: admin.email || 'admin@researchflow.com',
         full_name: admin.full_name || 'Dr. Arvind Mehra (Lead Guide)',
         phone: admin.phone || '+91 98111 22233',
-        university: admin.university || 'Indian Institute of Technology, Delhi',
-        department: admin.department || 'Computer Science & Engineering',
         role: admin.role || 'admin',
         status: admin.status || 'Active',
-        avatar_url: admin.avatar_url || '',
+        avatar_url: admin.avatar_url || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80',
       },
     });
   } catch (error: any) {
@@ -709,9 +707,9 @@ export const getAdminProfile = async (req: Request, res: Response): Promise<void
 export const updateAdminProfile = async (req: Request, res: Response): Promise<void> => {
   try {
     const adminId = req.user?.userId || 'usr-admin-01';
-    const { fullName, email, phone, university, department, username } = req.body;
+    const { fullName, email, phone, username, avatarUrl } = req.body;
 
-    if (!fullName && !email && !phone && !university && !department && !username) {
+    if (!fullName && !email && !phone && !username && avatarUrl === undefined) {
       res.status(400).json({ error: 'At least one field is required to update.' });
       return;
     }
@@ -719,8 +717,7 @@ export const updateAdminProfile = async (req: Request, res: Response): Promise<v
     // Ensure columns exist
     await query(`
       ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR(255);
-      ALTER TABLE users ADD COLUMN IF NOT EXISTS university VARCHAR(255);
-      ALTER TABLE users ADD COLUMN IF NOT EXISTS department VARCHAR(255);
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT;
     `).catch(() => {});
 
     // Check if target user exists, if not create
@@ -732,8 +729,8 @@ export const updateAdminProfile = async (req: Request, res: Response): Promise<v
     let targetId = adminId;
     if (checkUser.rows.length === 0) {
       await query(
-        `INSERT INTO users (id, username, email, full_name, role, phone, university, department, status)
-         VALUES ($1, $2, $3, $4, 'admin', $5, $6, $7, 'Active')
+        `INSERT INTO users (id, username, email, full_name, role, phone, avatar_url, status)
+         VALUES ($1, $2, $3, $4, 'admin', $5, $6, 'Active')
          ON CONFLICT (id) DO NOTHING`,
         [
           adminId,
@@ -741,8 +738,7 @@ export const updateAdminProfile = async (req: Request, res: Response): Promise<v
           email || 'admin@researchflow.com',
           fullName || 'Dr. Arvind Mehra (Lead Guide)',
           phone || '+91 98111 22233',
-          university || 'Indian Institute of Technology, Delhi',
-          department || 'Computer Science & Engineering',
+          avatarUrl || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80',
         ]
       );
     } else {
@@ -755,19 +751,17 @@ export const updateAdminProfile = async (req: Request, res: Response): Promise<v
        SET full_name = COALESCE($1, full_name),
            email = COALESCE($2, email),
            phone = COALESCE($3, phone),
-           university = COALESCE($4, university),
-           department = COALESCE($5, department),
-           username = COALESCE($6, username),
+           username = COALESCE($4, username),
+           avatar_url = CASE WHEN $5 IS NOT NULL THEN $5 ELSE avatar_url END,
            updated_at = NOW()
-       WHERE id = $7
-       RETURNING id, username, email, full_name, phone, university, department, role, status`,
+       WHERE id = $6
+       RETURNING id, username, email, full_name, phone, avatar_url, role, status`,
       [
         fullName !== undefined ? fullName.trim() : null,
         email !== undefined ? email.trim().toLowerCase() : null,
         phone !== undefined ? phone.trim() : null,
-        university !== undefined ? university.trim() : null,
-        department !== undefined ? department.trim() : null,
         username !== undefined ? username.trim().toLowerCase() : null,
+        avatarUrl !== undefined ? avatarUrl : null,
         targetId,
       ]
     );
@@ -783,8 +777,7 @@ export const updateAdminProfile = async (req: Request, res: Response): Promise<v
         email: updatedUser.email,
         full_name: updatedUser.full_name,
         phone: updatedUser.phone,
-        university: updatedUser.university,
-        department: updatedUser.department,
+        avatar_url: updatedUser.avatar_url,
         role: updatedUser.role,
         status: updatedUser.status,
       },
