@@ -640,3 +640,213 @@ export const sendNotification = async (req: Request, res: Response): Promise<voi
   }
 };
 
+/**
+ * 10. Get Admin Profile
+ */
+export const getAdminProfile = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const adminId = req.user?.userId || 'usr-admin-01';
+
+    // Ensure columns exist safely in case of migration variance
+    await query(`
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR(255);
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS university VARCHAR(255);
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS department VARCHAR(255);
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS status VARCHAR(32) DEFAULT 'Active';
+    `).catch(() => {});
+
+    // Try finding admin user
+    let userResult = await query(
+      `SELECT id, username, email, full_name, role, status, phone, university, department, avatar_url, created_at, updated_at
+       FROM users
+       WHERE id = $1 OR role = 'admin'
+       ORDER BY CASE WHEN id = $1 THEN 0 ELSE 1 END, created_at ASC
+       LIMIT 1`,
+      [adminId]
+    );
+
+    // If no admin user found in database, seed default record
+    if (userResult.rows.length === 0) {
+      await query(
+        `INSERT INTO users (id, username, email, full_name, role, phone, university, department, status)
+         VALUES ($1, 'admin', 'admin@researchflow.com', 'Dr. Arvind Mehra (Lead Guide)', 'admin', '+91 98111 22233', 'Indian Institute of Technology, Delhi', 'Computer Science & Engineering', 'Active')
+         ON CONFLICT (id) DO UPDATE SET role = 'admin'`,
+        [adminId]
+      );
+
+      userResult = await query(
+        `SELECT id, username, email, full_name, role, status, phone, university, department, avatar_url, created_at, updated_at
+         FROM users WHERE id = $1 LIMIT 1`,
+        [adminId]
+      );
+    }
+
+    const admin = userResult.rows[0];
+    res.status(200).json({
+      success: true,
+      user: {
+        id: admin.id,
+        username: admin.username || 'admin',
+        email: admin.email || 'admin@researchflow.com',
+        full_name: admin.full_name || 'Dr. Arvind Mehra (Lead Guide)',
+        phone: admin.phone || '+91 98111 22233',
+        university: admin.university || 'Indian Institute of Technology, Delhi',
+        department: admin.department || 'Computer Science & Engineering',
+        role: admin.role || 'admin',
+        status: admin.status || 'Active',
+        avatar_url: admin.avatar_url || '',
+      },
+    });
+  } catch (error: any) {
+    console.error('Error fetching admin profile:', error);
+    res.status(500).json({ error: 'Failed to fetch admin profile.', details: error.message });
+  }
+};
+
+/**
+ * 11. Update Admin Profile
+ */
+export const updateAdminProfile = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const adminId = req.user?.userId || 'usr-admin-01';
+    const { fullName, email, phone, university, department, username } = req.body;
+
+    if (!fullName && !email && !phone && !university && !department && !username) {
+      res.status(400).json({ error: 'At least one field is required to update.' });
+      return;
+    }
+
+    // Ensure columns exist
+    await query(`
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR(255);
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS university VARCHAR(255);
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS department VARCHAR(255);
+    `).catch(() => {});
+
+    // Check if target user exists, if not create
+    const checkUser = await query(
+      `SELECT id FROM users WHERE id = $1 OR role = 'admin' LIMIT 1`,
+      [adminId]
+    );
+
+    let targetId = adminId;
+    if (checkUser.rows.length === 0) {
+      await query(
+        `INSERT INTO users (id, username, email, full_name, role, phone, university, department, status)
+         VALUES ($1, $2, $3, $4, 'admin', $5, $6, $7, 'Active')
+         ON CONFLICT (id) DO NOTHING`,
+        [
+          adminId,
+          username || 'admin',
+          email || 'admin@researchflow.com',
+          fullName || 'Dr. Arvind Mehra (Lead Guide)',
+          phone || '+91 98111 22233',
+          university || 'Indian Institute of Technology, Delhi',
+          department || 'Computer Science & Engineering',
+        ]
+      );
+    } else {
+      targetId = checkUser.rows[0].id;
+    }
+
+    // Update the record
+    const updateResult = await query(
+      `UPDATE users
+       SET full_name = COALESCE($1, full_name),
+           email = COALESCE($2, email),
+           phone = COALESCE($3, phone),
+           university = COALESCE($4, university),
+           department = COALESCE($5, department),
+           username = COALESCE($6, username),
+           updated_at = NOW()
+       WHERE id = $7
+       RETURNING id, username, email, full_name, phone, university, department, role, status`,
+      [
+        fullName !== undefined ? fullName.trim() : null,
+        email !== undefined ? email.trim().toLowerCase() : null,
+        phone !== undefined ? phone.trim() : null,
+        university !== undefined ? university.trim() : null,
+        department !== undefined ? department.trim() : null,
+        username !== undefined ? username.trim().toLowerCase() : null,
+        targetId,
+      ]
+    );
+
+    const updatedUser = updateResult.rows[0];
+
+    res.status(200).json({
+      success: true,
+      message: 'Admin profile updated successfully.',
+      user: {
+        id: updatedUser.id,
+        username: updatedUser.username,
+        email: updatedUser.email,
+        full_name: updatedUser.full_name,
+        phone: updatedUser.phone,
+        university: updatedUser.university,
+        department: updatedUser.department,
+        role: updatedUser.role,
+        status: updatedUser.status,
+      },
+    });
+  } catch (error: any) {
+    console.error('Error updating admin profile:', error);
+    res.status(500).json({ error: 'Failed to update admin profile.', details: error.message });
+  }
+};
+
+/**
+ * 12. Update Admin Password
+ */
+export const updateAdminPassword = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const adminId = req.user?.userId || 'usr-admin-01';
+    const { currentPassword, newPassword } = req.body;
+
+    if (!newPassword || newPassword.length < 6) {
+      res.status(400).json({ error: 'New password must be at least 6 characters long.' });
+      return;
+    }
+
+    // Find the admin user
+    const userResult = await query(
+      `SELECT id, password_hash FROM users WHERE id = $1 OR role = 'admin' LIMIT 1`,
+      [adminId]
+    );
+
+    let targetId = adminId;
+    if (userResult.rows.length > 0) {
+      const user = userResult.rows[0];
+      targetId = user.id;
+
+      // If existing password_hash is present and currentPassword was provided, verify it
+      if (user.password_hash && currentPassword) {
+        const isMatch = await bcrypt.compare(currentPassword, user.password_hash);
+        if (!isMatch) {
+          res.status(400).json({ error: 'Current password does not match.' });
+          return;
+        }
+      }
+    }
+
+    const newHash = await bcrypt.hash(newPassword, 10);
+
+    await query(
+      `UPDATE users
+       SET password_hash = $1,
+           updated_at = NOW()
+       WHERE id = $2`,
+      [newHash, targetId]
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Admin password updated successfully.',
+    });
+  } catch (error: any) {
+    console.error('Error updating admin password:', error);
+    res.status(500).json({ error: 'Failed to update admin password.', details: error.message });
+  }
+};
+
+

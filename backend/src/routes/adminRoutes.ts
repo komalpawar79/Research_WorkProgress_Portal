@@ -9,6 +9,9 @@ import {
   getDashboardStats,
   getAdminNotifications,
   sendNotification,
+  getAdminProfile,
+  updateAdminProfile,
+  updateAdminPassword,
 } from '../controllers/adminController.js';
 import { authenticate, requireAdmin } from '../middleware/authMiddleware.js';
 
@@ -16,6 +19,11 @@ const router = Router();
 
 // Protect ALL /api/admin routes with Admin authentication
 router.use(authenticate, requireAdmin);
+
+// Admin Profile & Settings
+router.get('/profile', getAdminProfile);
+router.put('/profile', updateAdminProfile);
+router.put('/password', updateAdminPassword);
 
 // Dashboard live metrics from PostgreSQL
 router.get('/dashboard-stats', getDashboardStats);

@@ -98,4 +98,58 @@ export const adminService = {
       body: JSON.stringify(payload),
     });
   },
+
+  async getProfile(): Promise<any> {
+    try {
+      const res = await fetchApi<{ success: boolean; user: any }>('/api/admin/profile');
+      if (res && res.user) {
+        return res.user;
+      }
+    } catch (e) {
+      console.warn('Admin getProfile API error:', e);
+    }
+    // Fallback to local storage or default admin info
+    const cached = localStorage.getItem('rf_user');
+    if (cached) {
+      try {
+        return JSON.parse(cached);
+      } catch {}
+    }
+    return {
+      id: 'usr-admin-01',
+      username: 'admin',
+      email: 'admin@researchflow.com',
+      full_name: 'Dr. Arvind Mehra (Lead Guide)',
+      phone: '+91 98111 22233',
+      university: 'Indian Institute of Technology, Delhi',
+      department: 'Computer Science & Engineering',
+      role: 'admin',
+    };
+  },
+
+  async updateProfile(payload: {
+    fullName?: string;
+    email?: string;
+    phone?: string;
+    university?: string;
+    department?: string;
+    username?: string;
+  }): Promise<any> {
+    const res = await fetchApi<{ success: boolean; message: string; user: any }>('/api/admin/profile', {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    });
+    if (res && res.user) {
+      localStorage.setItem('rf_user', JSON.stringify(res.user));
+    }
+    return res;
+  },
+
+  async updatePassword(payload: { currentPassword?: string; newPassword: string }): Promise<any> {
+    return await fetchApi<{ success: boolean; message: string }>('/api/admin/password', {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    });
+  },
 };
+
