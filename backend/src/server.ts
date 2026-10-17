@@ -19,10 +19,21 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// CORS setup to allow frontend requests
+// CORS setup to allow frontend requests from Vercel, Localhost, and Render
 app.use(
   cors({
-    origin: ['http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173', 'http://127.0.0.1:3000'],
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      if (
+        origin.includes('localhost') ||
+        origin.includes('127.0.0.1') ||
+        origin.includes('vercel.app') ||
+        origin.includes('onrender.com')
+      ) {
+        return callback(null, true);
+      }
+      return callback(null, true);
+    },
     credentials: true,
   })
 );
@@ -75,8 +86,9 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
   res.status(500).json({ error: 'Internal server error', details: err.message });
 });
 
-app.listen(PORT, async () => {
-  console.log(`🚀 ResearchFlow Secure Backend running at http://localhost:${PORT}`);
+const portNumber = Number(PORT) || 5000;
+app.listen(portNumber, '0.0.0.0', async () => {
+  console.log(`🚀 ResearchFlow Secure Backend running at http://0.0.0.0:${portNumber}`);
   console.log(`📁 Connected: PostgreSQL 18 Multi-Tenant ↔ Dynamic Watermark ↔ Screenshot Monitoring`);
   await testDbConnection();
 });

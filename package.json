@@ -14,6 +14,8 @@
     "build:frontend": "npm run build --prefix frontend",
     "build:backend": "npm run build --prefix backend",
     "build": "npm run build:frontend",
+    "start": "npm run start --prefix backend",
+    "start:backend": "npm run start --prefix backend",
     "clean-port": "powershell -Command \"$p = Get-NetTCPConnection -LocalPort 5000 -ErrorAction SilentlyContinue; if ($p) { Stop-Process -Id $p.OwningProcess -Force; Write-Host 'Port 5000 freed' } else { Write-Host 'Port 5000 already free' }\"",
     "install:all": "npm install --prefix frontend && npm install --prefix backend"
   }
